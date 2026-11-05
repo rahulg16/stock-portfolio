@@ -7,10 +7,21 @@ import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { StockDetailScreen } from '../screens/StockDetailScreen';
 import { useTheme } from '../theme/ThemeProvider';
+import { BuySellSheet } from '../components/BuySellSheet';
+import { useNavigation, useRoute } from '@react-navigation/native';
+
+function BuySellSheetWrapper() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const symbol = route.params?.symbol ?? '';
+
+  return <BuySellSheet symbol={symbol} onClose={() => navigation.goBack()} />;
+}
 
 type RootStackParamList = {
   Root: undefined;
   StockDetail: { symbol: string };
+  BuySellSheet: { symbol: string };
 };
 
 type TabParamList = {
@@ -50,6 +61,14 @@ function StockDetailStack() {
         options={({ route }) => ({
           title: route.params.symbol ?? 'Detail',
         })}
+      />
+      <Stack.Screen
+        name="BuySellSheet"
+        component={BuySellSheetWrapper}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
       />
     </Stack.Navigator>
   );
