@@ -8,11 +8,12 @@ export interface ListRowProps {
   onPress?: () => void;
   swipeActions?: readonly { label: string; color: string; onPress: () => void }[];
   chevron?: boolean;
+  disabled?: boolean;
   style?: ViewStyle;
   contentStyle?: ViewStyle;
 }
 
-export const ListRow = memo(function ListRow({ leading, trailing, onPress, swipeActions, chevron = false, style, contentStyle }: ListRowProps) {
+export const ListRow = memo(function ListRow({ leading, trailing, onPress, swipeActions, chevron = false, disabled = false, style, contentStyle }: ListRowProps) {
   const theme = useTheme();
 
   const Content = (
@@ -34,8 +35,9 @@ export const ListRow = memo(function ListRow({ leading, trailing, onPress, swipe
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={chevron ? 'Navigate' : undefined}
-        onPress={onPress}
-        style={({ pressed }) => [{ backgroundColor: theme.colors.background, opacity: pressed ? 0.65 : 1 }, style]}
+        accessibilityState={{ disabled }}
+        onPress={disabled ? undefined : onPress}
+        style={({ pressed }) => [{ backgroundColor: theme.colors.background, opacity: (pressed && !disabled) ? 0.65 : disabled ? 0.5 : 1 }, style]}
       >
         {Content}
       </Pressable>
