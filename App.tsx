@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
 import {
   MarketBootstrapProvider,
   useMarketBootstrap,
@@ -35,8 +36,10 @@ export default function App() {
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
         <MarketBootstrapProvider>
-          <StatusBar style="auto" />
-          <AppGate />
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <AppGate />
+          </NavigationContainer>
         </MarketBootstrapProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

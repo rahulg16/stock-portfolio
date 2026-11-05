@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Swipeable from 'react-native-gesture-handler/lib/typescript/components/ReanimatedSwipeable';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useQuote } from '../store/hooks';
 import { watchlistStore } from '../store/watchlistStore';
 import { ALLOWED_SYMBOLS } from '../domain/seed';
