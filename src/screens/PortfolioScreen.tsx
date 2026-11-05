@@ -12,9 +12,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMarketBootstrap } from '../bootstrap/MarketBootstrap';
 import { EmptyView } from '../components/EmptyView';
 import { InlineErrorBanner } from '../components/ErrorView';
-import { HOLDING_ROW_HEIGHT, HoldingRow } from '../components/HoldingRow';
 import { PausedBanner } from '../components/PausedBanner';
-import { SummaryCard } from '../components/SummaryCard';
+import { HOLDING_ROW_HEIGHT, HoldingRow } from './Portfolio/components/HoldingRow';
+import { SummaryCard } from './Portfolio/components/SummaryCard';
 import { filterHoldings, sortHoldings } from '../domain/calculations';
 import type { Holding, HoldingSortKey } from '../domain/types';
 import {

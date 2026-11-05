@@ -4,10 +4,10 @@ import {
   formatINR,
   formatPercent,
   formatSignedINR,
-} from '../domain/money';
-import type { Holding } from '../domain/types';
-import { useSummary } from '../store/hooks';
-import { useTheme } from '../theme/ThemeProvider';
+} from '../../../domain/money';
+import type { Holding } from '../../../domain/types';
+import { useSummary } from '../../../store/hooks';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 interface SummaryCardProps {
   holdings: readonly Holding[];

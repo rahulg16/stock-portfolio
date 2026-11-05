@@ -1,15 +1,15 @@
 import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { calculateHolding } from '../domain/calculations';
+import { calculateHolding } from '../../../domain/calculations';
 import {
   formatINR,
   formatIndianInteger,
   formatPercent,
   formatSignedINR,
-} from '../domain/money';
-import type { Holding } from '../domain/types';
-import { useQuote } from '../store/hooks';
-import { useTheme } from '../theme/ThemeProvider';
+} from '../../../domain/money';
+import type { Holding } from '../../../domain/types';
+import { useQuote } from '../../../store/hooks';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 export const HOLDING_ROW_HEIGHT = 78;
 
