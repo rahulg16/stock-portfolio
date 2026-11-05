@@ -22,6 +22,7 @@ type RootStackParamList = {
   Root: undefined;
   StockDetail: { symbol: string };
   BuySellSheet: { symbol: string };
+  AddSymbol: { existingSymbols: string[] };
 };
 
 type TabParamList = {
@@ -67,6 +68,15 @@ function StockDetailStack() {
         component={BuySellSheetWrapper}
         options={{
           headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="AddSymbol"
+        component={AddSymbolScreen}
+        options={{
+          title: 'Add Symbol',
+          headerTitleAlign: 'center',
           presentation: 'modal',
         }}
       />
