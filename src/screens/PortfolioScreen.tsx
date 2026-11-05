@@ -24,6 +24,8 @@ import {
 } from '../store/hooks';
 import { marketStore } from '../store/marketStore';
 import { useTheme } from '../theme/ThemeProvider';
+import { SegmentedControl } from '../shared/ui/SegmentedControl';
+import { Divider } from '../shared/ui/Divider';
 
 const SORT_OPTIONS: readonly { key: HoldingSortKey; label: string }[] = [
   { key: 'name', label: 'Name' },
@@ -38,7 +40,7 @@ const SORT_OPTIONS: readonly { key: HoldingSortKey; label: string }[] = [
  * This screen re-renders at most once per second (sort order) or on user input,
  * which keeps the list smooth while ~20 ticks/second arrive.
  */
-export function PortfolioScreen() {
+export function PortfolioScreen({ navigation }: { navigation?: any }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { refresh, refreshing, refreshError } = useMarketBootstrap();
@@ -81,7 +83,7 @@ export function PortfolioScreen() {
   const trimmedQuery = query.trim();
   const emptyTitle = hasHoldings ? 'No matching holdings' : 'No holdings yet';
   const emptyMessage = hasHoldings
-    ? `No symbols match “${trimmedQuery}”.`
+    ? `No symbols match "${trimmedQuery}".`
     : 'Your portfolio is empty.';
   const clearFilter = useCallback(() => setQuery(''), []);
 
@@ -101,7 +103,7 @@ export function PortfolioScreen() {
         </Text>
         <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
           {hasHoldings
-            ? `${holdings.length} holdings · live prices`
+            ? `${holdings.length} holdings \u00b7 live prices`
             : 'Live prices'}
         </Text>
       </View>
@@ -118,56 +120,16 @@ export function PortfolioScreen() {
           />
         ) : null}
 
-        <View
-          style={[
-            styles.segmented,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          {SORT_OPTIONS.map((option) => {
-            const selected = option.key === sortKey;
-            return (
-              <Pressable
-                key={option.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={`Sort by ${option.label}`}
-                onPress={() => setSortKey(option.key)}
-                style={[
-                  styles.segment,
-                  selected && { backgroundColor: theme.colors.accentMuted },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    {
-                      color: selected
-                        ? theme.colors.accent
-                        : theme.colors.textMuted,
-                      fontWeight: selected ? '700' : '500',
-                    },
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SegmentedControl
+          options={SORT_OPTIONS}
+          value={sortKey}
+          onChange={(key) => setSortKey(key as HoldingSortKey)}
+          accessibilityLabel="Sort holdings"
+        />
 
-        <View
-          style={[
-            styles.searchContainer,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
+        <Divider inset={16} />
+
+        <View style={styles.searchContainer}>
           <TextInput
             accessibilityLabel="Filter holdings by symbol"
             value={query}
@@ -179,7 +141,7 @@ export function PortfolioScreen() {
             returnKeyType="search"
             style={[styles.searchInput, { color: theme.colors.text }]}
           />
-          {query.length > 0 ? (
+          {query.length > 0 && (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Clear filter"
@@ -187,10 +149,10 @@ export function PortfolioScreen() {
               onPress={clearFilter}
             >
               <Text style={[styles.clear, { color: theme.colors.textMuted }]}>
-                ✕
+                \u2715
               </Text>
             </Pressable>
-          ) : null}
+          )}
         </View>
       </View>
 
@@ -257,39 +219,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 10,
   },
-  segmented: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    padding: 3,
-    gap: 3,
-  },
-  segment: {
-    flex: 1,
-    borderRadius: 8,
-    paddingVertical: 7,
-    alignItems: 'center',
-  },
-  segmentText: {
-    fontSize: 13,
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 40,
+    gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    paddingVertical: 0,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   clear: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '700',
-    paddingLeft: 8,
+    color: 'transparent', // overridden by theme in component
+    paddingHorizontal: 4,
   },
   listContent: {
     paddingTop: 6,

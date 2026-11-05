@@ -1,15 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   MarketBootstrapProvider,
   useMarketBootstrap,
 } from './src/bootstrap/MarketBootstrap';
 import { ErrorView } from './src/components/ErrorView';
 import { LoadingView } from './src/components/LoadingView';
-import { PortfolioScreen } from './src/screens/PortfolioScreen';
 import { ThemeProvider } from './src/theme/ThemeProvider';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
 function AppGate() {
   const { status, error, retry } = useMarketBootstrap();
@@ -28,20 +27,18 @@ function AppGate() {
     );
   }
 
-  return <PortfolioScreen />;
+  return <RootNavigator />;
 }
 
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <MarketBootstrapProvider>
-            <StatusBar style="auto" />
-            <AppGate />
-          </MarketBootstrapProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
+      <ThemeProvider>
+        <MarketBootstrapProvider>
+          <StatusBar style="auto" />
+          <AppGate />
+        </MarketBootstrapProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
