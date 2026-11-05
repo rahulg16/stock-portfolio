@@ -39,6 +39,13 @@ yarn-error.*
 # tests
 coverage/
 
+# expo export artifacts
+.export-check/
+*.hbc
+
+# screen recording
+demo.mp4
+
 # generated native folders
 /ios
 /android
