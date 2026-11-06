@@ -61,9 +61,22 @@ export function PortfolioScreen({ navigation }: { navigation?: any }) {
     setFrozenSortVersion(null);
   }, []);
 
+  // Stable navigate function to avoid re-renders
+  const navigateToStockDetail = useCallback(
+    (symbol: string) => {
+      navigation?.navigate('StockDetail', { symbol });
+    },
+    [navigation],
+  );
+
   const renderItem = useCallback(
-    ({ item }: { item: Holding }) => <HoldingRow holding={item} />,
-    [],
+    ({ item }: { item: Holding }) => (
+      <HoldingRow
+        holding={item}
+        onPress={navigateToStockDetail}
+      />
+    ),
+    [navigateToStockDetail],
   );
   const keyExtractor = useCallback((item: Holding) => item.symbol, []);
   const getItemLayout = useCallback(
@@ -200,7 +213,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 6,
   },
   title: {
     fontSize: 28,
@@ -213,7 +226,7 @@ const styles = StyleSheet.create({
   },
   padded: {
     paddingHorizontal: 16,
-    gap: 10,
+    gap: 6,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -223,8 +236,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   clear: {
     fontSize: 18,
