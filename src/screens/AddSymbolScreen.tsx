@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View, SafeAreaView } from 'react-native';
 import { ALLOWED_SYMBOLS } from '../domain/seed';
 import { useTheme } from '../theme/ThemeProvider';
-import { useQuote } from '../store/hooks';
+import { useQuote } from '../store/marketStore';
 import { watchlistStore } from '../store/watchlistStore';
 import { ListRow } from '../shared/ui/ListRow';
 import { Chip } from '../shared/ui/Chip';
@@ -25,7 +25,7 @@ export function AddSymbolScreen() {
 
   const handleAdd = useCallback((symbol: string) => {
     if (!existingSymbols.has(symbol)) {
-      watchlistStore.add(symbol);
+      watchlistStore.getState().add(symbol);
     }
     navigation.goBack();
   }, [existingSymbols, navigation]);

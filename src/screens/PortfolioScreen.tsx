@@ -17,12 +17,8 @@ import { HOLDING_ROW_HEIGHT, HoldingRow } from './Portfolio/components/HoldingRo
 import { SummaryCard } from './Portfolio/components/SummaryCard';
 import { filterHoldings, sortHoldings } from '../domain/calculations';
 import type { Holding, HoldingSortKey } from '../domain/types';
-import {
-  SORT_INTERVAL_MS,
-  useHoldings,
-  useMarketVersion,
-} from '../store/hooks';
-import { marketStore } from '../store/marketStore';
+import { SORT_INTERVAL_MS, marketStore, useMarketVersion } from '../store/marketStore';
+import { useHoldings } from '../store/portfolioStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { SegmentedControl } from '../shared/ui/SegmentedControl';
 import { Divider } from '../shared/ui/Divider';
@@ -55,7 +51,7 @@ export function PortfolioScreen({ navigation }: { navigation?: any }) {
 
   const data = useMemo(() => {
     const filtered = filterHoldings(holdings, query);
-    return sortHoldings(filtered, marketStore.getQuotes(), sortKey);
+    return sortHoldings(filtered, marketStore.getState().quotes, sortKey);
   }, [holdings, query, sortKey, sortVersion]);
 
   const handleScrollBegin = useCallback(() => {

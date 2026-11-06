@@ -1,12 +1,17 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   formatINR,
   formatPercent,
   formatSignedINR,
 } from '../../../domain/money';
+import { calculateSummary } from '../../../domain/calculations';
 import type { Holding } from '../../../domain/types';
-import { useSummary } from '../../../store/hooks';
+import {
+  SUMMARY_INTERVAL_MS,
+  marketStore,
+  useMarketVersion,
+} from '../../../store/marketStore';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 interface SummaryCardProps {
@@ -29,7 +34,11 @@ export const SummaryCard = memo(function SummaryCard({
   holdings,
 }: SummaryCardProps) {
   const theme = useTheme();
-  const summary = useSummary(holdings);
+  const version = useMarketVersion(SUMMARY_INTERVAL_MS);
+  const summary = useMemo(
+    () => calculateSummary(holdings, marketStore.getState().quotes),
+    [holdings, version],
+  );
 
   const totalPnlColor =
     summary.pnlPaise > 0

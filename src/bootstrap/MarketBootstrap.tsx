@@ -11,7 +11,6 @@ import {
 import { AppState, type AppStateStatus } from 'react-native';
 import { fetchQuotes } from '../api/liquide';
 import { ALLOWED_SYMBOLS } from '../domain/seed';
-import { feedStatusStore } from '../feed/feedStatus';
 import { createTickSimulator, type TickSimulator } from '../feed/simulator';
 import { marketStore } from '../store/marketStore';
 import { portfolioStore } from '../store/portfolioStore';
@@ -42,7 +41,7 @@ function toErrorMessage(error: unknown): string {
 
 /**
  * Startup sequence:
- *   hydrate local state -> fetch the REST baseline once -> seed MarketStore
+ *   hydrate local state -> fetch the REST baseline once -> seed marketStore
  *   -> connect the feed -> render.
  *
  * The shared test API is never polled; it is only called here and on an explicit
@@ -69,7 +68,10 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      await Promise.all([portfolioStore.hydrate(), watchlistStore.hydrate()]);
+      await Promise.all([
+        portfolioStore.persist.rehydrate(),
+        watchlistStore.persist.rehydrate(),
+      ]);
       const quotes = await fetchQuotes(ALLOWED_SYMBOLS);
 
       if (!mountedRef.current || requestId !== requestIdRef.current) {
@@ -81,8 +83,8 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      marketStore.applyBaseline(quotes);
-      feedStatusStore.start();
+      marketStore.getState().applyBaseline(quotes);
+      marketStore.getState().startStatusPolling();
 
       const existing = simulatorRef.current;
       if (existing) {
@@ -94,7 +96,7 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
         // The feed only emits ticks; this is the single place that feeds them
         // into the store, which then fans out per-symbol updates.
         simulatorUnsubscribeRef.current = simulator.onTick((tick) => {
-          marketStore.applyTick(tick);
+          marketStore.getState().applyTick(tick);
         });
         simulator.connect();
       }
@@ -106,7 +108,7 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
       }
       setError(toErrorMessage(caught));
       setStatus('error');
-      feedStatusStore.stop();
+      marketStore.getState().stopStatusPolling();
     }
   }, []);
 
@@ -133,13 +135,13 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      marketStore.applyBaseline(quotes);
+      marketStore.getState().applyBaseline(quotes);
       const simulator = simulatorRef.current;
       if (simulator) {
         simulator.updateBaseline(quotes);
         simulator.connect();
       }
-      feedStatusStore.start();
+      marketStore.getState().startStatusPolling();
     } catch (caught) {
       if (mountedRef.current) {
         setRefreshError(toErrorMessage(caught));
@@ -163,7 +165,7 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
       simulatorUnsubscribeRef.current?.();
       simulatorUnsubscribeRef.current = null;
       simulatorRef.current = null;
-      feedStatusStore.stop();
+      marketStore.getState().stopStatusPolling();
     };
   }, [bootstrap]);
 
@@ -176,11 +178,11 @@ export function MarketBootstrapProvider({ children }: { children: ReactNode }) {
         if (nextState === 'active') {
           if (statusRef.current === 'ready' && simulatorRef.current) {
             simulatorRef.current.connect();
-            feedStatusStore.start();
+            marketStore.getState().startStatusPolling();
           }
         } else {
           simulatorRef.current?.disconnect();
-          feedStatusStore.stop();
+          marketStore.getState().stopStatusPolling();
         }
       },
     );

@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import { useQuote } from "../store/hooks";
-import { watchlistStore } from "../store/watchlistStore";
+import { useQuote } from "../store/marketStore";
+import { useWatchlist, watchlistStore } from "../store/watchlistStore";
 import { ALLOWED_SYMBOLS } from "../domain/seed";
 import { useTheme } from "../theme/ThemeProvider";
 import { PausedBanner } from "../components/PausedBanner";
@@ -106,17 +106,17 @@ const rowStyles = StyleSheet.create({
 
 export function WatchlistScreen({ navigation }: { navigation: any }) {
   const theme = useTheme();
-  const symbols = watchlistStore.getSymbols();
+  const symbols = useWatchlist();
   const [showAddSheet, setShowAddSheet] = useState(false);
 
-  const data = useMemo(() => symbols, [symbols.length]);
+  const data = symbols;
 
   const renderItem = useCallback(
     ({ item }: { item: string }) => (
       <WatchlistRow
         symbol={item}
         onPress={() => navigation.navigate("StockDetail", { symbol: item })}
-        onDelete={() => watchlistStore.remove(item)}
+        onDelete={() => watchlistStore.getState().remove(item)}
       />
     ),
     [],
@@ -180,7 +180,7 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
         visible={showAddSheet}
         onClose={() => setShowAddSheet(false)}
         onAdd={(symbol) => {
-          watchlistStore.add(symbol);
+          watchlistStore.getState().add(symbol);
           setShowAddSheet(false);
         }}
         existingSymbols={new Set(symbols)}

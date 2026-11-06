@@ -1,4 +1,4 @@
-import { useQuote } from '../store/hooks';
+import { useQuote } from '../store/marketStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { StyleSheet, Text, View } from 'react-native';
 import { ListRow } from '../shared/ui/ListRow';

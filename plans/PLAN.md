@@ -2,7 +2,7 @@
 
 **Status:** Ready to build — core scope only  
 **Project root:** `/Users/rahulgangadharan/Desktop/projects/react-native-projects/stock-portfolio`  
-**Brief:** `stock-portfolio/plan/BRIEF.md`  
+**Brief:** `stock-portfolio/plans/BRIEF.md`  
 **Date:** 2026-11-05
 
 ---
@@ -514,7 +514,7 @@ Rules:
 ```text
 stock-portfolio/
 ├── App.tsx
-├── plan/
+├── plans/
 │   ├── BRIEF.md
 │   └── PLAN.md
 ├── README.md

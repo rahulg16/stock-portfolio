@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { Modal } from 'react-native';
-import { useQuote } from '../store/hooks';
-import { portfolioStore } from '../store/portfolioStore';
-import { marketStore } from '../store/marketStore';
+import { marketStore, useQuote } from '../store/marketStore';
+import { portfolioStore, useHolding } from '../store/portfolioStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { SegmentedControl } from '../shared/ui/SegmentedControl';
 import { NumericInput } from '../shared/ui/NumericInput';
@@ -20,7 +19,7 @@ interface BuySellSheetProps {
 export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
   const theme = useTheme();
   const quote = useQuote(symbol);
-  const holding = portfolioStore.getHolding(symbol);
+  const holding = useHolding(symbol);
 
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState('');
@@ -58,7 +57,7 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
     setLoading(true);
     setConfirmError(undefined);
 
-    const currentQuote = marketStore.getQuote(symbol);
+    const currentQuote = marketStore.getState().quotes.get(symbol);
     if (!currentQuote) {
       setConfirmError('Price unavailable, try again');
       setLoading(false);
@@ -66,7 +65,9 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
     }
 
     try {
-      portfolioStore.applyOrder(symbol, side, Number(qty), currentQuote.ltpPaise);
+      portfolioStore
+        .getState()
+        .applyOrder(symbol, side, Number(qty), currentQuote.ltpPaise);
       onClose();
     } catch (e: any) {
       setConfirmError(e.message ?? 'Order failed');

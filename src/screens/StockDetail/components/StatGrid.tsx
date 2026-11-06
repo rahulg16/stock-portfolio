@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
-import { useQuote } from '../../../store/hooks';
-import { useMarketVersion } from '../../../store/hooks';
+import {
+  SUMMARY_INTERVAL_MS,
+  useMarketVersion,
+  useQuote,
+} from '../../../store/marketStore';
 import { fmtINR, fmtInt, fmtRelativeTime } from '../../../shared/utils/format';
-
-const SUMMARY_INTERVAL_MS = 250;
 
 const STATS: readonly { key: string; label: string; getValue: (quote: any) => any }[] = [
   { key: 'open', label: 'Open', getValue: q => q.openPaise },

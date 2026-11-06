@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuote } from '../store/hooks';
-import { portfolioStore } from '../store/portfolioStore';
+import { useQuote } from '../store/marketStore';
+import { useHolding } from '../store/portfolioStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { PausedBanner } from '../components/PausedBanner';
 import { PriceChart } from './StockDetail/components/PriceChart';
@@ -16,7 +16,7 @@ export function StockDetailScreen({ route, navigation }: { route: { params?: { s
   const insets = useSafeAreaInsets();
   const symbol = route.params?.symbol ?? '';
   const quote = useQuote(symbol);
-  const holding = portfolioStore.getHolding(symbol);
+  const holding = useHolding(symbol);
 
   const ltp = quote ? fmtINR(quote.ltpPaise) : '—';
   const dayChange = quote && quote.prevClosePaise !== null

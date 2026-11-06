@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { StockDetailScreen } from '../screens/StockDetailScreen';
+import { AddSymbolScreen } from '../screens/AddSymbolScreen';
 import { useTheme } from '../theme/ThemeProvider';
 import { BuySellSheet } from '../components/BuySellSheet';
 import { useNavigation, useRoute } from '@react-navigation/native';

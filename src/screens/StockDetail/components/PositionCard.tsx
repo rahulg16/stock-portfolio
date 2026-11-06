@@ -1,13 +1,14 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
-import { useQuote } from '../../../store/hooks';
+import {
+  SUMMARY_INTERVAL_MS,
+  useMarketVersion,
+  useQuote,
+} from '../../../store/marketStore';
 import { calculateHolding } from '../../../domain/calculations';
-import { portfolioStore } from '../../../store/portfolioStore';
-import { useMarketVersion } from '../../../store/hooks';
+import { useHolding } from '../../../store/portfolioStore';
 import { fmtINR, fmtSignedINR, fmtPct } from '../../../shared/utils/format';
-
-const SUMMARY_INTERVAL_MS = 250;
 
 interface PositionCardProps {
   symbol: string;
@@ -15,7 +16,7 @@ interface PositionCardProps {
 
 export const PositionCard = memo(function PositionCard({ symbol }: PositionCardProps) {
   const theme = useTheme();
-  const holding = portfolioStore.getHolding(symbol);
+  const holding = useHolding(symbol);
   const quote = useQuote(symbol);
   const version = useMarketVersion(SUMMARY_INTERVAL_MS);
 

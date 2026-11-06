@@ -2,7 +2,7 @@ import { useRef, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { Path, Svg, LinearGradient, Stop, Defs } from 'react-native-svg';
-import { useMarketVersion } from '../../../store/hooks';
+import { marketStore, useMarketVersion } from '../../../store/marketStore';
 
 interface PriceChartProps {
   symbol: string;
@@ -22,8 +22,7 @@ export function PriceChart({ symbol, maxPoints = MAX_POINTS, height = 180 }: Pri
 
   // Get latest quote and add to buffer
   useEffect(() => {
-    const { marketStore } = require('../../../store/marketStore');
-    const quote = marketStore.getQuote(symbol);
+    const quote = marketStore.getState().quotes.get(symbol);
     if (quote && quote.ltpPaise) {
       const price = quote.ltpPaise / 100; // convert paise to rupees for display
       const x = pointsRef.current.length;
