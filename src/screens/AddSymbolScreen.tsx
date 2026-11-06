@@ -9,6 +9,9 @@ import { Chip } from '../shared/ui/Chip';
 import { Divider } from '../shared/ui/Divider';
 import { fmtINR, fmtPct, fmtSignedINR } from '../shared/utils/format';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 interface AddSymbolRowProps {
   symbol: string;
@@ -50,8 +53,8 @@ AddSymbolRow.displayName = 'AddSymbolRow';
 
 export function AddSymbolScreen() {
   const theme = useTheme();
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'AddSymbol'>>();
   const existingSymbols = new Set(route.params?.existingSymbols ?? []);
   const [query, setQuery] = useState('');
 

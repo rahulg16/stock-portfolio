@@ -7,14 +7,21 @@ import {
   useQuote,
 } from '../../../store/marketStore';
 import { fmtINR, fmtInt, fmtRelativeTime } from '../../../shared/utils/format';
+import type { Quote } from '../../../domain/types';
 
-const STATS: readonly { key: string; label: string; getValue: (quote: any) => any }[] = [
-  { key: 'open', label: 'Open', getValue: q => q.openPaise },
-  { key: 'high', label: 'High', getValue: q => q.highPaise },
-  { key: 'low', label: 'Low', getValue: q => q.lowPaise },
-  { key: 'prevClose', label: 'Prev Close', getValue: q => q.prevClosePaise },
+type StatValue = number | null | undefined;
+
+const STATS: readonly {
+  key: keyof Quote;
+  label: string;
+  getValue: (quote: Quote) => StatValue;
+}[] = [
+  { key: 'openPaise', label: 'Open', getValue: q => q.openPaise },
+  { key: 'highPaise', label: 'High', getValue: q => q.highPaise },
+  { key: 'lowPaise', label: 'Low', getValue: q => q.lowPaise },
+  { key: 'prevClosePaise', label: 'Prev Close', getValue: q => q.prevClosePaise },
   { key: 'volume', label: 'Volume', getValue: q => q.volume },
-  { key: 'updated', label: 'Updated', getValue: q => q.updatedAt },
+  { key: 'updatedAt', label: 'Updated', getValue: q => q.updatedAt },
 ];
 
 interface StatGridProps {
@@ -34,16 +41,16 @@ export const StatGrid = memo(function StatGrid({ symbol }: StatGridProps) {
       const raw = stat.getValue(quote);
       let formatted: string;
       switch (stat.key) {
-        case 'open':
-        case 'high':
-        case 'low':
-        case 'prevClose':
+        case 'openPaise':
+        case 'highPaise':
+        case 'lowPaise':
+        case 'prevClosePaise':
           formatted = raw !== null ? fmtINR(raw) : '—';
           break;
         case 'volume':
           formatted = raw !== null ? fmtInt(raw) : '—';
           break;
-        case 'updated':
+        case 'updatedAt':
           formatted = raw ? fmtRelativeTime(raw) : '—';
           break;
         default:

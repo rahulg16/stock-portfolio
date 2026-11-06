@@ -10,8 +10,17 @@ import { PositionCard } from './StockDetail/components/PositionCard';
 import { StatGrid } from './StockDetail/components/StatGrid';
 import { fmtINR, fmtSignedINR, fmtPct } from '../shared/utils/format';
 import { Button } from '../shared/ui/Button';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
-export function StockDetailScreen({ route, navigation }: { route: { params?: { symbol: string } }; navigation: any }) {
+export function StockDetailScreen({ 
+  route, 
+  navigation 
+}: { 
+  route: RouteProp<RootStackParamList, 'StockDetail'>; 
+  navigation: NativeStackNavigationProp<RootStackParamList>; 
+}) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const symbol = route.params?.symbol ?? '';

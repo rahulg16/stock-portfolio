@@ -15,7 +15,7 @@ export interface ButtonProps {
 
 const VARIANTS = ['primary', 'secondary', 'danger', 'ghost'] as const;
 
-export const Button = memo(forwardRef<Pressable, ButtonProps>(
+const ButtonComponent = memo(forwardRef<any, ButtonProps>(
   ({ title, onPress, variant = 'primary', disabled = false, loading = false, fullWidth = false, accessibilityLabel, style, ...rest }, ref) => {
     const theme = useTheme();
 
@@ -49,7 +49,7 @@ export const Button = memo(forwardRef<Pressable, ButtonProps>(
 
     return (
       <Pressable
-        ref={ref as any}
+        ref={ref}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
         accessibilityState={{ disabled: disabled || loading }}
@@ -74,7 +74,9 @@ export const Button = memo(forwardRef<Pressable, ButtonProps>(
   }
 ));
 
-Button.displayName = 'Button';
+ButtonComponent.displayName = 'Button';
+
+export const Button = ButtonComponent;
 
 const styles = StyleSheet.create({
   buttonText: { fontSize: 16, fontWeight: '600' },

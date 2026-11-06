@@ -12,6 +12,8 @@ import { ListRow } from "../shared/ui/ListRow";
 import { Divider } from "../shared/ui/Divider";
 import { fmtINR, fmtPct, fmtSignedINR } from "../shared/utils/format";
 import { Button } from "../shared/ui/Button";
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 const ROW_HEIGHT = 72;
 
@@ -102,11 +104,13 @@ const rowStyles = StyleSheet.create({
   swipeAction: { flex: 1, justifyContent: "center", paddingRight: 16 },
 });
 
-export function WatchlistScreen({ navigation }: { navigation: any }) {
+export function WatchlistScreen({ navigation }: { 
+  navigation: NativeStackNavigationProp<RootStackParamList> 
+}) {
   const theme = useTheme();
   const symbols = useWatchlist();
 
-  const data = symbols;
+  const data = [...symbols];
 
   const renderItem = useCallback(
     ({ item }: { item: string }) => (
@@ -116,12 +120,12 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
         onDelete={() => watchlistStore.getState().remove(item)}
       />
     ),
-    [],
+    [navigation],
   );
 
   const keyExtractor = useCallback((item: string) => item, []);
   const getItemLayout = useCallback(
-    (_data: any, index: number) => ({
+    (_data: Readonly<ArrayLike<string>> | undefined, index: number) => ({
       length: ROW_HEIGHT,
       offset: ROW_HEIGHT * index,
       index,
@@ -144,7 +148,7 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
         <Button
           title="+"
           variant="ghost"
-          onPress={() => navigation.navigate("AddSymbol", { existingSymbols: symbols })}
+          onPress={() => navigation.navigate("AddSymbol", { existingSymbols: [...symbols] })}
           accessibilityLabel="Add symbol"
           style={{ minWidth: 44, minHeight: 44, paddingHorizontal: 8 }}
         />
@@ -167,7 +171,7 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
             title="No symbols yet"
             message="Add symbols to track their prices live."
             actionLabel="Add symbol"
-            onAction={() => navigation.navigate("AddSymbol", { existingSymbols: symbols })}
+            onAction={() => navigation.navigate("AddSymbol", { existingSymbols: [...symbols] })}
           />
         }
         contentContainerStyle={screenStyles.listContent}

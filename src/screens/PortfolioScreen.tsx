@@ -22,6 +22,8 @@ import { useHoldings } from '../store/portfolioStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { SegmentedControl } from '../shared/ui/SegmentedControl';
 import { Divider } from '../shared/ui/Divider';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 const SORT_OPTIONS: readonly { key: HoldingSortKey; label: string }[] = [
   { key: 'name', label: 'Name' },
@@ -36,7 +38,9 @@ const SORT_OPTIONS: readonly { key: HoldingSortKey; label: string }[] = [
  * This screen re-renders at most once per second (sort order) or on user input,
  * which keeps the list smooth while ~20 ticks/second arrive.
  */
-export function PortfolioScreen({ navigation }: { navigation?: any }) {
+export function PortfolioScreen({ navigation }: { 
+  navigation?: NativeStackNavigationProp<RootStackParamList> 
+}) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { refresh, refreshing, refreshError } = useMarketBootstrap();

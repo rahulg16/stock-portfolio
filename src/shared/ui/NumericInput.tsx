@@ -15,7 +15,7 @@ export interface NumericInputProps {
   style?: ViewStyle;
 }
 
-export const NumericInput = memo(forwardRef<TextInput, NumericInputProps>(
+const NumericInputComponent = memo(forwardRef<any, NumericInputProps>(
   ({ value, onChangeText, label, placeholder, max, error, disabled = false, accessibilityLabel, onBlur, style, ...rest }, ref) => {
     const theme = useTheme();
     const [focused, setFocused] = useState(false);
@@ -40,7 +40,7 @@ export const NumericInput = memo(forwardRef<TextInput, NumericInputProps>(
         {label && <Text style={[styles.label, { color: theme.colors.textMuted }]}>{label}</Text>}
         <View style={styles.inputWrapper}>
           <TextInput
-            ref={ref as any}
+            ref={ref}
             accessibilityLabel={accessibilityLabel ?? label}
             value={value}
             onChangeText={handleChange}
@@ -82,7 +82,9 @@ export const NumericInput = memo(forwardRef<TextInput, NumericInputProps>(
   }
 ));
 
-NumericInput.displayName = 'NumericInput';
+NumericInputComponent.displayName = 'NumericInput';
+
+export const NumericInput = NumericInputComponent;
 
 const styles = StyleSheet.create({
   container: { gap: 6 },
