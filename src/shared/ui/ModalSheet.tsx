@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 8,
     gap: 12,
   },
   grabber: { width: 40, height: 4, borderRadius: 2, marginTop: 4, alignSelf: 'center' },

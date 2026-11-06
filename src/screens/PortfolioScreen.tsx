@@ -17,12 +17,8 @@ import { HOLDING_ROW_HEIGHT, HoldingRow } from './Portfolio/components/HoldingRo
 import { SummaryCard } from './Portfolio/components/SummaryCard';
 import { filterHoldings, sortHoldings } from '../domain/calculations';
 import type { Holding, HoldingSortKey } from '../domain/types';
-import {
-  SORT_INTERVAL_MS,
-  useHoldings,
-  useMarketVersion,
-} from '../store/hooks';
-import { marketStore } from '../store/marketStore';
+import { SORT_INTERVAL_MS, marketStore, useMarketVersion } from '../store/marketStore';
+import { useHoldings } from '../store/portfolioStore';
 import { useTheme } from '../theme/ThemeProvider';
 import { SegmentedControl } from '../shared/ui/SegmentedControl';
 import { Divider } from '../shared/ui/Divider';
@@ -55,7 +51,7 @@ export function PortfolioScreen({ navigation }: { navigation?: any }) {
 
   const data = useMemo(() => {
     const filtered = filterHoldings(holdings, query);
-    return sortHoldings(filtered, marketStore.getQuotes(), sortKey);
+    return sortHoldings(filtered, marketStore.getState().quotes, sortKey);
   }, [holdings, query, sortKey, sortVersion]);
 
   const handleScrollBegin = useCallback(() => {
@@ -65,9 +61,22 @@ export function PortfolioScreen({ navigation }: { navigation?: any }) {
     setFrozenSortVersion(null);
   }, []);
 
+  // Stable navigate function to avoid re-renders
+  const navigateToStockDetail = useCallback(
+    (symbol: string) => {
+      navigation?.navigate('StockDetail', { symbol });
+    },
+    [navigation],
+  );
+
   const renderItem = useCallback(
-    ({ item }: { item: Holding }) => <HoldingRow holding={item} />,
-    [],
+    ({ item }: { item: Holding }) => (
+      <HoldingRow
+        holding={item}
+        onPress={navigateToStockDetail}
+      />
+    ),
+    [navigateToStockDetail],
   );
   const keyExtractor = useCallback((item: Holding) => item.symbol, []);
   const getItemLayout = useCallback(
@@ -204,7 +213,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 6,
   },
   title: {
     fontSize: 28,
@@ -217,7 +226,7 @@ const styles = StyleSheet.create({
   },
   padded: {
     paddingHorizontal: 16,
-    gap: 10,
+    gap: 6,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -227,8 +236,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   clear: {
     fontSize: 18,

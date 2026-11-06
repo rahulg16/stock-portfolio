@@ -33,27 +33,26 @@ npx expo run:ios
 
 ## 🧠 Architecture: State & Re-render Strategy
 
-### Custom External Stores + `useSyncExternalStore`
+### Zustand Stores + Per-Symbol Selectors
 
-Instead of Redux/Zustand, we use plain TypeScript classes as external stores with `useSyncExternalStore` for React 18+ concurrent compatibility:
+State lives in three Zustand (v5) stores, each in a single readable file. Components subscribe through selector hooks, so a RELIANCE tick only re-renders RELIANCE consumers:
 
 ```
-MarketStore (quotes, per-symbol listeners)
+marketStore (quotes Map, per-symbol lastSeq, feed status)
     ├─ useQuote(symbol) → only that symbol's row re-renders
     ├─ useMarketVersion(250ms) → SummaryCard coalesced
     └─ useMarketVersion(1s)   → Sort order (frozen during scroll)
 
-PortfolioStore (holdings, persistence)
-WatchlistStore (symbols, persistence)
-FeedStatusStore (paused/live/stale banner)
+portfolioStore (holdings, persistence)
+watchlistStore (symbols, persistence)
 ```
 
-### Why not Redux/Zustand?
+### Why Zustand?
 
-- **No middleware overhead** — ticks flow directly store → component
-- **Explicit per-symbol subscriptions** — `MarketStore.subscribeSymbol(symbol, listener)` gives O(1) updates
+- **O(1) per-symbol updates** — `useQuote(symbol)` selects one entry from the quotes `Map`; untouched `Quote` objects keep their identity, so other rows do not re-render
+- **No provider wrapper** — vanilla Zustand stores can be driven directly in tests
 - **Coalesced aggregates** — Summary/sort throttle at 250ms/1s, not on every tick
-- **Testable** — stores are pure classes, no provider wrapper needed in tests
+- **Small surface** — three focused stores plus a storage helper, with no hand-rolled subscription plumbing
 
 ### Performance Results
 
@@ -61,6 +60,18 @@ FeedStatusStore (paused/live/stale banner)
 - **Only ticked row commits** — FlatList, other rows, PortfolioScreen stay committed-free
 - **SummaryCard** commits at 250ms cadence
 - **Sort** recomputes at 1s, frozen during active drag
+
+## 🗃️ State Stores
+
+| Store | Holds | Hooks |
+|-------|-------|-------|
+| `marketStore` | live quotes (`ReadonlyMap<string, Quote>`), per-symbol `lastSeq` stale-tick guard, `lastTickAt`, feed `status` | `useQuote`, `useFeedStatus`, `useMarketVersion` |
+| `portfolioStore` | persisted holdings + `applyOrder` | `useHoldings`, `useHolding` |
+| `watchlistStore` | persisted symbols + `add`/`remove` | `useWatchlist` |
+
+`marketStore` exposes `applyTick`, `applyBaseline`, `startStatusPolling`, and `stopStatusPolling`, and exports `SUMMARY_INTERVAL_MS` (250 ms) and `SORT_INTERVAL_MS` (1000 ms). **Market data stays in memory** — only holdings and watchlist symbols are persisted. Feed status lives here too (polled every 500 ms, updating only on a real transition), so there is no separate feed-status store.
+
+`portfolioStore` and `watchlistStore` use Zustand's `persist` middleware with AsyncStorage (`skipHydration: true`, `partialize`, and `merge` validators that fall back to defaults on malformed data). Bootstrap calls `portfolioStore.persist.rehydrate()` and `watchlistStore.persist.rehydrate()`. `src/store/storage.ts` wraps AsyncStorage best-effort and upgrades pre-migration bare-array values on read under the same storage keys. Hooks are co-located with their stores.
 
 ## 💰 Money Rounding & Summary Reconciliation
 
@@ -93,13 +104,13 @@ If a holding has price but no `prevClose`, it's included in totals but excluded 
 
 ## 📡 Simulator / Feed
 
-`TickSimulator` implements the `PriceFeed` interface:
+`createTickSimulator(options)` is a closure factory that returns a `PriceFeed`; `TickSimulator` is an interface extending `PriceFeed` with `updateBaseline`. `src/feed/types.ts` defines `PriceFeed`, the swap point for a real socket.
 
 - **20 ticks/sec** globally (one symbol per 50ms)
 - **Partial ticks** — only changed fields present (`ltp` always, `high`/`low`/`volume` occasionally)
-- **2% stale ticks** — cached older tick emitted after newer one; store ignores via per-symbol `seq`
+- **2% stale ticks** — replays the immediately previous tick after a newer one; store ignores via per-symbol `seq`
 - **5s pauses every 60–90s** — drives "Prices paused" → "Prices live" banner
-- **Injectable RNG/clock** — deterministic tests
+- **Injectable RNG** — deterministic tests
 
 **Replace with real socket:** Implement `PriceFeed` interface, swap in `MarketBootstrapProvider`.
 
@@ -119,7 +130,7 @@ If a holding has price but no `prevClose`, it's included in totals but excluded 
 
 ```bash
 npm run typecheck   # tsc --noEmit (strict)
-npm test            # jest --runInBand (88 tests)
+npm test            # jest (66 tests)
 npm run test:ci     # jest --ci --coverage
 ```
 
@@ -129,8 +140,8 @@ npm run test:ci     # jest --ci --coverage
 src/
 ├── api/liquide.ts              # REST client, validation, paise conversion
 ├── domain/                     # Pure: money, calculations, orders, types, seed
-├── feed/                       # TickSimulator, FeedStatusStore
-├── store/                      # MarketStore, PortfolioStore, WatchlistStore, hooks
+├── feed/                       # PriceFeed interface, tick simulator factory
+├── store/                      # marketStore, portfolioStore, watchlistStore, storage
 ├── theme/                      # System light/dark ThemeProvider
 ├── shared/
 │   ├── ui/                     # Button, SegmentedControl, NumericInput, ModalSheet, ListRow, StatItem, Chip, Divider

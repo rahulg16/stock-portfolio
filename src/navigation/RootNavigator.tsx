@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { StockDetailScreen } from '../screens/StockDetailScreen';
+import { AddSymbolScreen } from '../screens/AddSymbolScreen';
 import { useTheme } from '../theme/ThemeProvider';
 import { BuySellSheet } from '../components/BuySellSheet';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -33,7 +34,6 @@ type TabParamList = {
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 type PortfolioTabProps = BottomTabScreenProps<TabParamList, 'Portfolio'>;
@@ -45,43 +45,6 @@ function PortfolioTab({ navigation }: PortfolioTabProps) {
 
 function WatchlistTab({ navigation }: WatchlistTabProps) {
   return <WatchlistScreen navigation={navigation} />;
-}
-
-function StockDetailStack() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: 'transparent' },
-        headerTitleAlign: 'center',
-        headerTintColor: 'inherit',
-      }}
-    >
-      <Stack.Screen
-        name="StockDetail"
-        component={StockDetailScreen}
-        options={({ route }) => ({
-          title: route.params.symbol ?? 'Detail',
-        })}
-      />
-      <Stack.Screen
-        name="BuySellSheet"
-        component={BuySellSheetWrapper}
-        options={{
-          headerShown: false,
-          presentation: 'modal',
-        }}
-      />
-      <Stack.Screen
-        name="AddSymbol"
-        component={AddSymbolScreen}
-        options={{
-          title: 'Add Symbol',
-          headerTitleAlign: 'center',
-          presentation: 'modal',
-        }}
-      />
-    </Stack.Navigator>
-  );
 }
 
 function TabNavigator() {
@@ -104,8 +67,8 @@ function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Portfolio" component={PortfolioTab} options={{ tabBarLabel: 'Portfolio' }} />
-      <Tab.Screen name="Watchlist" component={WatchlistTab} options={{ tabBarLabel: 'Watchlist' }} />
+      <Tab.Screen name="Portfolio" component={PortfolioTab} options={{ header: () => null }}/>
+      <Tab.Screen name="Watchlist" component={WatchlistTab} options={{ header: () => null }}/>
     </Tab.Navigator>
   );
 }
@@ -115,7 +78,23 @@ export function RootNavigator({ children }: { children?: ReactNode }) {
     <SafeAreaProvider>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Root" component={TabNavigator} />
-        <Stack.Screen name="StockDetail" component={StockDetailStack} />
+        <Stack.Screen name="StockDetail" component={StockDetailScreen} />
+        <Stack.Screen
+          name="BuySellSheet"
+          component={BuySellSheetWrapper}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+          }}
+        />
+        <Stack.Screen
+          name="AddSymbol"
+          component={AddSymbolScreen}
+          options={{
+            headerShown: false,
+            presentation: 'fullScreenModal',
+          }}
+        />
       </Stack.Navigator>
     </SafeAreaProvider>
   );

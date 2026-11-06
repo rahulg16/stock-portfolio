@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../theme/ThemeProvider';
-import { useQuote } from '../../../store/hooks';
-import { useMarketVersion } from '../../../store/hooks';
+import {
+  SUMMARY_INTERVAL_MS,
+  useMarketVersion,
+  useQuote,
+} from '../../../store/marketStore';
 import { fmtINR, fmtInt, fmtRelativeTime } from '../../../shared/utils/format';
-
-const SUMMARY_INTERVAL_MS = 250;
 
 const STATS: readonly { key: string; label: string; getValue: (quote: any) => any }[] = [
   { key: 'open', label: 'Open', getValue: q => q.openPaise },
@@ -54,32 +55,49 @@ export const StatGrid = memo(function StatGrid({ symbol }: StatGridProps) {
 
   return (
     <View style={[styles.grid, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-      {rows.map((row, i) => (
-        <View key={row.key} style={[styles.cell, i >= 3 && styles.borderTop, i % 3 !== 0 && styles.borderLeft]}>
-          <Text style={[styles.label, { color: theme.colors.textMuted }]}>{row.label}</Text>
-          <Text style={[styles.value, { color: theme.colors.text }]}>{row.formatted}</Text>
-        </View>
-      ))}
+      {/* Row 1 */}
+      <View style={styles.row}>
+        {rows.slice(0, 3).map((row, i) => (
+          <View key={row.key} style={[styles.cell, i > 0 && styles.borderLeft]}>
+            <Text style={[styles.label, { color: theme.colors.textMuted }]}>{row.label}</Text>
+            <Text style={[styles.value, { color: theme.colors.text }]}>{row.formatted}</Text>
+          </View>
+        ))}
+      </View>
+      {/* Row 2 */}
+      <View style={[styles.row, styles.borderTop]}>
+        {rows.slice(3, 6).map((row, i) => (
+          <View key={row.key} style={[styles.cell, i > 0 && styles.borderLeft]}>
+            <Text style={[styles.label, { color: theme.colors.textMuted }]}>{row.label}</Text>
+            <Text style={[styles.value, { color: theme.colors.text }]}>{row.formatted}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderRadius: 16,
     overflow: 'hidden',
   },
+  row: {
+    flexDirection: 'row',
+  },
+  borderTop: {
+    borderTopWidth: 1,
+  },
   cell: {
     flex: 1,
-    minWidth: '33.33%',
     padding: 14,
     alignItems: 'center',
+    minWidth: '33.33%',
   },
-  borderTop: { borderTopWidth: StyleSheet.hairlineWidth },
-  borderLeft: { borderLeftWidth: StyleSheet.hairlineWidth },
+  borderLeft: {
+    borderLeftWidth: 1,
+  },
   label: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4, marginBottom: 4 },
   value: { fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] },
 });

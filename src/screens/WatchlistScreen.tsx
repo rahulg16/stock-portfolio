@@ -1,15 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import { useQuote } from "../store/hooks";
-import { watchlistStore } from "../store/watchlistStore";
+import { useQuote } from "../store/marketStore";
+import { useWatchlist, watchlistStore } from "../store/watchlistStore";
 import { ALLOWED_SYMBOLS } from "../domain/seed";
 import { useTheme } from "../theme/ThemeProvider";
 import { PausedBanner } from "../components/PausedBanner";
 import { EmptyView } from "../components/EmptyView";
-import { LoadingView } from "../components/LoadingView";
-import { AddSymbolSheet } from "./AddSymbolSheet";
 import { ListRow } from "../shared/ui/ListRow";
 import { Divider } from "../shared/ui/Divider";
 import { fmtINR, fmtPct, fmtSignedINR } from "../shared/utils/format";
@@ -106,17 +104,16 @@ const rowStyles = StyleSheet.create({
 
 export function WatchlistScreen({ navigation }: { navigation: any }) {
   const theme = useTheme();
-  const symbols = watchlistStore.getSymbols();
-  const [showAddSheet, setShowAddSheet] = useState(false);
+  const symbols = useWatchlist();
 
-  const data = useMemo(() => symbols, [symbols.length]);
+  const data = symbols;
 
   const renderItem = useCallback(
     ({ item }: { item: string }) => (
       <WatchlistRow
         symbol={item}
         onPress={() => navigation.navigate("StockDetail", { symbol: item })}
-        onDelete={() => watchlistStore.remove(item)}
+        onDelete={() => watchlistStore.getState().remove(item)}
       />
     ),
     [],
@@ -147,7 +144,7 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
         <Button
           title="+"
           variant="ghost"
-          onPress={() => setShowAddSheet(true)}
+          onPress={() => navigation.navigate("AddSymbol", { existingSymbols: symbols })}
           accessibilityLabel="Add symbol"
           style={{ minWidth: 44, minHeight: 44, paddingHorizontal: 8 }}
         />
@@ -170,20 +167,10 @@ export function WatchlistScreen({ navigation }: { navigation: any }) {
             title="No symbols yet"
             message="Add symbols to track their prices live."
             actionLabel="Add symbol"
-            onAction={() => setShowAddSheet(true)}
+            onAction={() => navigation.navigate("AddSymbol", { existingSymbols: symbols })}
           />
         }
         contentContainerStyle={screenStyles.listContent}
-      />
-
-      <AddSymbolSheet
-        visible={showAddSheet}
-        onClose={() => setShowAddSheet(false)}
-        onAdd={(symbol) => {
-          watchlistStore.add(symbol);
-          setShowAddSheet(false);
-        }}
-        existingSymbols={new Set(symbols)}
       />
     </SafeAreaView>
   );
@@ -196,7 +183,7 @@ const screenStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.5 },
   listContent: { paddingTop: 8, paddingBottom: 24 },

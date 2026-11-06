@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { useFeedStatus } from '../store/hooks';
+import { useFeedStatus } from '../store/marketStore';
 import { useTheme } from '../theme/ThemeProvider';
 
 /**

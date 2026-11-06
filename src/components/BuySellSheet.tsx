@@ -1,9 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Platform } from 'react-native';
-import { Modal } from 'react-native';
-import { useQuote } from '../store/hooks';
-import { portfolioStore } from '../store/portfolioStore';
-import { marketStore } from '../store/marketStore';
+import { StyleSheet, View, Text, SafeAreaView, ScrollView } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { SegmentedControl } from '../shared/ui/SegmentedControl';
 import { NumericInput } from '../shared/ui/NumericInput';
@@ -11,6 +7,7 @@ import { Button } from '../shared/ui/Button';
 import { Divider } from '../shared/ui/Divider';
 import { fmtINR } from '../shared/utils/format';
 import { validateQty } from '../shared/utils/validation';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 interface BuySellSheetProps {
   symbol: string;
@@ -18,9 +15,12 @@ interface BuySellSheetProps {
 }
 
 export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const symbolFromRoute = route.params?.symbol ?? symbol;
   const theme = useTheme();
-  const quote = useQuote(symbol);
-  const holding = portfolioStore.getHolding(symbol);
+  const quote = useQuote(symbolFromRoute);
+  const holding = useHolding(symbolFromRoute);
 
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState('');
@@ -58,7 +58,7 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
     setLoading(true);
     setConfirmError(undefined);
 
-    const currentQuote = marketStore.getQuote(symbol);
+    const currentQuote = marketStore.getState().quotes.get(symbolFromRoute);
     if (!currentQuote) {
       setConfirmError('Price unavailable, try again');
       setLoading(false);
@@ -66,8 +66,11 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
     }
 
     try {
-      portfolioStore.applyOrder(symbol, side, Number(qty), currentQuote.ltpPaise);
+      portfolioStore
+        .getState()
+        .applyOrder(symbolFromRoute, side, Number(qty), currentQuote.ltpPaise);
       onClose();
+      navigation.goBack();
     } catch (e: any) {
       setConfirmError(e.message ?? 'Order failed');
     } finally {
@@ -80,74 +83,70 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
     : '';
 
   return (
-    <Modal
-      visible={true}
-      onRequestClose={onClose}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      transparent={true}
-    >
-      <View style={styles.overlay} onTouchStart={onClose} />
-      <View style={[styles.sheet, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.grabberContainer}>
-          <View style={[styles.grabber, { backgroundColor: theme.colors.border }]} />
-        </View>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>
-            {side} {symbol}
-          </Text>
-          <Button
-            title="✕"
-            variant="ghost"
-            onPress={onClose}
-            accessibilityLabel="Close"
-            style={{ minWidth: 40, minHeight: 40, padding: 0 }}
-          />
-        </View>
+    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+      {/* Grabber */}
+      <View style={styles.grabberContainer}>
+        <View style={[styles.grabber, { backgroundColor: theme.colors.border }]} />
+      </View>
 
-        <Divider inset={16} />
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          {side} {symbolFromRoute}
+        </Text>
+        <Button
+          title="✕"
+          variant="ghost"
+          onPress={() => { onClose(); navigation.goBack(); }}
+          accessibilityLabel="Close"
+          style={{ minWidth: 40, minHeight: 40, padding: 0 }}
+        />
+      </View>
 
-        <View style={styles.content}>
-          {/* Buy/Sell Toggle */}
-          <SegmentedControl
-            options={[
-              { key: 'BUY', label: 'Buy' },
-              { key: 'SELL', label: 'Sell' },
-            ]}
-            value={side}
-            onChange={(key) => setSide(key as 'BUY' | 'SELL')}
-            accessibilityLabel="Order side"
-          />
+      <Divider inset={16} />
 
-          {/* Quantity Input */}
-          <NumericInput
-            label="Quantity"
-            value={qty}
-            onChangeText={handleQtyChange}
-            placeholder="Enter quantity"
-            max={side === 'SELL' ? holding?.qty : undefined}
-            error={qtyError}
-            accessibilityLabel={`${side.toLowerCase()} quantity`}
-            disabled={loading}
-          />
-          {availableText && (
-            <Text style={[styles.available, { color: theme.colors.textMuted }]}>{availableText}</Text>
-          )}
+      {/* Scrollable content */}
+      <ScrollView style={styles.scrollContent} contentContainerStyle={styles.content}>
+        {/* Buy/Sell Toggle */}
+        <SegmentedControl
+          options={[
+            { key: 'BUY', label: 'Buy' },
+            { key: 'SELL', label: 'Sell' },
+          ]}
+          value={side}
+          onChange={(key) => setSide(key as 'BUY' | 'SELL')}
+          accessibilityLabel="Order side"
+        />
 
-          {/* Estimated Value */}
-          <View style={styles.estimate}>
-            <Text style={[styles.estimateLabel, { color: theme.colors.textMuted }]}>Estimated Value</Text>
-            <Text style={[styles.estimateValue, { color: theme.colors.accent }]}>{estimatedValue}</Text>
-          </View>
+        {/* Quantity Input */}
+        <NumericInput
+          label="Quantity"
+          value={qty}
+          onChangeText={handleQtyChange}
+          placeholder="Enter quantity"
+          max={side === 'SELL' ? holding?.qty : undefined}
+          error={qtyError}
+          accessibilityLabel={`${side.toLowerCase()} quantity`}
+          disabled={loading}
+        />
+        {availableText && (
+          <Text style={[styles.available, { color: theme.colors.textMuted }]}>{availableText}</Text>
+        )}
 
-          {/* Confirm Error */}
-          {confirmError && (
-            <Text style={[styles.confirmError, { color: theme.colors.danger }]}>{confirmError}</Text>
-          )}
+        {/* Estimated Value */}
+        <View style={styles.estimate}>
+          <Text style={[styles.estimateLabel, { color: theme.colors.textMuted }]}>Estimated Value</Text>
+          <Text style={[styles.estimateValue, { color: theme.colors.accent }]}>{estimatedValue}</Text>
         </View>
 
-        <Divider inset={16} />
+        {/* Confirm Error */}
+        {confirmError && (
+          <Text style={[styles.confirmError, { color: theme.colors.danger }]}>{confirmError}</Text>
+        )}
+      </ScrollView>
 
+      {/* Fixed bottom button */}
+      <View style={styles.bottomAction}>
         <Button
           title={loading ? 'Processing...' : `Confirm ${side}`}
           variant="primary"
@@ -155,31 +154,22 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
           onPress={handleConfirm}
           disabled={!canConfirm}
           loading={loading}
-          accessibilityLabel={`${side.toLowerCase()} ${qty} shares of ${symbol}`}
+          accessibilityLabel={`${side.toLowerCase()} ${qty} shares of ${symbolFromRoute}`}
         />
       </View>
-    </Modal>
+    </SafeAreaView>
   );
 }
 
+import { marketStore, useQuote } from '../store/marketStore';
+import { portfolioStore, useHolding } from '../store/portfolioStore';
+
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 24,
-    maxHeight: '85%',
-  },
+  screen: { flex: 1 },
   grabberContainer: {
     alignItems: 'center',
     paddingTop: 12,
+    paddingBottom: 8,
   },
   grabber: {
     width: 40,
@@ -192,14 +182,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
   },
+  scrollContent: { flex: 1 },
   content: {
     paddingHorizontal: 16,
     paddingTop: 8,
+    paddingBottom: 100, // space for fixed button
     gap: 16,
   },
   available: { fontSize: 13 },
@@ -215,4 +209,11 @@ const styles = StyleSheet.create({
   estimateLabel: { fontSize: 14, fontWeight: '600' },
   estimateValue: { fontSize: 18, fontWeight: '700', fontVariant: ['tabular-nums'] },
   confirmError: { fontSize: 13, textAlign: 'center' },
+  bottomAction: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+    paddingBottom: 16,
+  },
 });

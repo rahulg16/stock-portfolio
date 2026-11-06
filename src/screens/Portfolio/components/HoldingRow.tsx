@@ -8,7 +8,7 @@ import {
   formatSignedINR,
 } from '../../../domain/money';
 import type { Holding } from '../../../domain/types';
-import { useQuote } from '../../../store/hooks';
+import { useQuote } from '../../../store/marketStore';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 export const HOLDING_ROW_HEIGHT = 78;
