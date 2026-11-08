@@ -124,7 +124,15 @@ If a holding has price but no `prevClose`, it's included in totals but excluded 
 
 ## ⏱️ Time Spent
 
-~16 hours across milestones (scaffold → buy/sell sheet).
+~10 hours across milestones (scaffold → buy/sell sheet), based on 23 commits spanning Nov 5–6, 2026.
+
+## 📹 Screen Recording
+
+A 1–2 minute recording of the app running on the iPhone 17 simulator is available here:
+
+`demo.mp4` (repo root)
+
+The file is ~51 MB and is gitignored (see `.gitignore`), so it is not tracked in the repository. Play it locally to see the live ticks, Summary card, buy/sell flow, and paused/resume banner in action.
 
 ## 🧪 Test Commands
 
