@@ -9,42 +9,43 @@ import { StockDetailScreen } from '../screens/StockDetailScreen';
 import { AddSymbolScreen } from '../screens/AddSymbolScreen';
 import { useTheme } from '../theme/ThemeProvider';
 import { BuySellSheet } from '../components/BuySellSheet';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-function BuySellSheetWrapper() {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
-  const symbol = route.params?.symbol ?? '';
-
-  return <BuySellSheet symbol={symbol} onClose={() => navigation.goBack()} />;
-}
-
-type RootStackParamList = {
+export type RootStackParamList = {
   Root: undefined;
   StockDetail: { symbol: string };
   BuySellSheet: { symbol: string };
   AddSymbol: { existingSymbols: string[] };
 };
 
-type TabParamList = {
+export type TabParamList = {
   Portfolio: undefined;
   Watchlist: undefined;
 };
 
+function BuySellSheetWrapper() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'BuySellSheet'>>();
+  const symbol = route.params?.symbol ?? '';
+
+  return <BuySellSheet symbol={symbol} onClose={() => navigation.goBack()} />;
+}
+
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { BottomTabScreenProps, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 type PortfolioTabProps = BottomTabScreenProps<TabParamList, 'Portfolio'>;
 type WatchlistTabProps = BottomTabScreenProps<TabParamList, 'Watchlist'>;
 
 function PortfolioTab({ navigation }: PortfolioTabProps) {
-  return <PortfolioScreen navigation={navigation} />;
+  return <PortfolioScreen navigation={navigation as unknown as NativeStackNavigationProp<RootStackParamList>} />;
 }
 
 function WatchlistTab({ navigation }: WatchlistTabProps) {
-  return <WatchlistScreen navigation={navigation} />;
+  return <WatchlistScreen navigation={navigation as unknown as NativeStackNavigationProp<RootStackParamList>} />;
 }
 
 function TabNavigator() {

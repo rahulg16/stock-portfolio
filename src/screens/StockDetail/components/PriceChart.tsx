@@ -113,7 +113,7 @@ export function PriceChart({ symbol, maxPoints = MAX_POINTS, height = 200 }: Pri
     );
   }
 
-  const lastPoint = points[points.length - 1];
+  const lastPoint = points[points.length - 1]!;
 
   return (
     <View style={[styles.container, { height: height + 50 }]}>

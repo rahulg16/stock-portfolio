@@ -8,6 +8,9 @@ import { Divider } from '../shared/ui/Divider';
 import { fmtINR } from '../shared/utils/format';
 import { validateQty } from '../shared/utils/validation';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 interface BuySellSheetProps {
   symbol: string;
@@ -15,8 +18,7 @@ interface BuySellSheetProps {
 }
 
 export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const route = useRoute<RouteProp<RootStackParamList, 'BuySellSheet'>>();
   const symbolFromRoute = route.params?.symbol ?? symbol;
   const theme = useTheme();
   const quote = useQuote(symbolFromRoute);
@@ -69,10 +71,10 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
       portfolioStore
         .getState()
         .applyOrder(symbolFromRoute, side, Number(qty), currentQuote.ltpPaise);
-      onClose();
-      navigation.goBack();
-    } catch (e: any) {
-      setConfirmError(e.message ?? 'Order failed');
+      onClose(); 
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Order failed';
+      setConfirmError(message);
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ export function BuySellSheet({ symbol, onClose }: BuySellSheetProps) {
         <Button
           title="✕"
           variant="ghost"
-          onPress={() => { onClose(); navigation.goBack(); }}
+          onPress={onClose}
           accessibilityLabel="Close"
           style={{ minWidth: 40, minHeight: 40, padding: 0 }}
         />

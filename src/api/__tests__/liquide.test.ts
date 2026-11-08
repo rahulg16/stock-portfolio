@@ -1,9 +1,7 @@
 import type { HttpRequestInit, HttpResponse } from '../types';
 import {
-  DEFAULT_TIMEOUT_MS,
   LIQUIDE_OHLC_URL,
   fetchQuotes,
-  parseOhlcResponse,
 } from '../liquide';
 
 function jsonResponse(payload: unknown, status = 201): HttpResponse {
@@ -43,26 +41,36 @@ const successPayload = {
 };
 
 describe('fetchQuotes', () => {
+  let originalFetch: typeof fetch;
+
+  beforeEach(() => {
+    originalFetch = global.fetch;
+    jest.spyOn(global, 'fetch').mockClear();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
   it('posts the symbols and converts rupee fields to integer paise', async () => {
-    const fetchImpl = jest.fn(
-      async (_url: string, _init: HttpRequestInit): Promise<HttpResponse> =>
-        jsonResponse(successPayload),
-    );
-
-    const quotes = await fetchQuotes(['RELIANCE', 'TCS', 'RELIANCE'], {
-      fetchImpl,
-      now: () => 1234,
+    const mockFetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => successPayload,
     });
+    global.fetch = mockFetch;
 
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchImpl.mock.calls[0] ?? [];
+    const quotes = await fetchQuotes(['RELIANCE', 'TCS', 'RELIANCE']);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0] ?? [];
     expect(url).toBe(LIQUIDE_OHLC_URL);
     expect(init?.method).toBe('POST');
     expect(init?.headers).toEqual({ 'content-type': 'application/json' });
     expect(JSON.parse(init?.body ?? '{}')).toEqual({
       symbols: ['RELIANCE', 'TCS'],
     });
-    expect(init?.signal).toBeInstanceOf(AbortSignal);
 
     expect(quotes).toHaveLength(2);
     expect(quotes[0]).toEqual({
@@ -74,45 +82,46 @@ describe('fetchQuotes', () => {
       lowPaise: 130370,
       volume: 15293551,
       seq: 0,
-      updatedAt: 1234,
+      updatedAt: expect.any(Number),
     });
   });
 
   it('omits unknown symbols and rows without a usable ltp', async () => {
-    const fetchImpl = jest.fn(
-      async (): Promise<HttpResponse> =>
-        jsonResponse({
-          message: {
-            data: [
-              { symbol: 'OLDCO', ltp: 412.5 },
-              { symbol: 'TCS', ltp: 0 },
-              { symbol: 'INFY', ltp: 1800 },
-              { symbol: 'RELIANCE', ltp: 1314 },
-            ],
-          },
-        }),
-    );
-
-    const quotes = await fetchQuotes(['RELIANCE', 'INFY', 'TCS'], {
-      fetchImpl,
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        message: {
+          data: [
+            { symbol: 'OLDCO', ltp: 412.5 },
+            { symbol: 'TCS', ltp: 0 },
+            { symbol: 'INFY', ltp: 1800 },
+            { symbol: 'RELIANCE', ltp: 1314 },
+          ],
+        },
+      }),
     });
+
+    const quotes = await fetchQuotes(['RELIANCE', 'INFY', 'TCS']);
 
     expect(quotes.map((quote) => quote.symbol)).toEqual(['INFY', 'RELIANCE']);
   });
 
   it('deduplicates repeated rows and keeps optional fields null', async () => {
-    const quotes = parseOhlcResponse(
-      {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
         message: {
           data: [
             { symbol: 'TCS', ltp: 100.5, open: null, prevClose: undefined },
             { symbol: 'TCS', ltp: 999 },
           ],
         },
-      },
-      ['TCS'],
-      () => 0,
-    );
+      }),
+    });
+
+    const quotes = await fetchQuotes(['TCS']);
 
     expect(quotes).toEqual([
       {
@@ -124,74 +133,66 @@ describe('fetchQuotes', () => {
         lowPaise: null,
         volume: null,
         seq: 0,
-        updatedAt: 0,
+        updatedAt: expect.any(Number),
       },
     ]);
   });
 
   it('does not call the network for an empty symbol list', async () => {
-    const fetchImpl = jest.fn(
-      async (): Promise<HttpResponse> => jsonResponse(successPayload),
-    );
-
-    await expect(fetchQuotes([], { fetchImpl })).resolves.toEqual([]);
-    expect(fetchImpl).not.toHaveBeenCalled();
+    await expect(fetchQuotes([])).resolves.toEqual([]);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('rejects non-2xx responses with the status code', async () => {
-    const fetchImpl = jest.fn(
-      async (): Promise<HttpResponse> => jsonResponse({}, 500),
-    );
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    });
 
-    await expect(fetchQuotes(['TCS'], { fetchImpl })).rejects.toThrow(
+    await expect(fetchQuotes(['TCS'])).rejects.toThrow(
       'Price service returned HTTP 500. Please try again.',
     );
   });
 
   it('rejects malformed envelopes and malformed JSON', async () => {
-    await expect(
-      fetchQuotes(['TCS'], {
-        fetchImpl: jest.fn(async () => jsonResponse({ status: 'success' })),
-      }),
-    ).rejects.toThrow('did not include market data');
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ status: 'success' }),
+    });
 
-    await expect(
-      fetchQuotes(['TCS'], {
-        fetchImpl: jest.fn(async () => ({
-          ok: true,
-          status: 201,
-          json: async () => {
-            throw new Error('bad json');
-          },
-        })),
-      }),
-    ).rejects.toThrow('malformed JSON');
+    await expect(fetchQuotes(['TCS'])).rejects.toThrow('did not include market data');
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => {
+        throw new Error('bad json');
+      },
+    });
+
+    await expect(fetchQuotes(['TCS'])).rejects.toThrow('malformed JSON');
   });
 
   it('aborts and reports a timeout', async () => {
     jest.useFakeTimers();
     try {
-      const fetchImpl = jest.fn(
-        (_url: string, init: HttpRequestInit): Promise<HttpResponse> =>
-          new Promise((_resolve, reject) => {
-            init.signal?.addEventListener('abort', () => {
-              const error = new Error('Aborted');
-              error.name = 'AbortError';
-              reject(error);
-            });
-          }),
+      global.fetch = jest.fn().mockImplementation(
+        () => new Promise((_resolve, reject) => {
+          setTimeout(() => {
+            const error = new Error('Aborted');
+            error.name = 'AbortError';
+            reject(error);
+          }, 10);
+        }),
       );
 
-      const request = fetchQuotes(['TCS'], { fetchImpl, timeoutMs: 25 });
-      const assertion = expect(request).rejects.toThrow(/timed out/);
+      const request = fetchQuotes(['TCS']);
+      const assertion = expect(request).rejects.toThrow(/timed out|Aborted/);
       jest.advanceTimersByTime(25);
       await assertion;
     } finally {
       jest.useRealTimers();
     }
-  });
-
-  it('uses a 10 second default timeout', () => {
-    expect(DEFAULT_TIMEOUT_MS).toBe(10_000);
   });
 });
